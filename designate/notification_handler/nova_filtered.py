@@ -66,9 +66,11 @@ class NovaFixedFilteredHandler(NotificationHandler):
         context.all_tenants = True
 
         zone_id = cfg.CONF[self.name].zone_id
+        zone_name = cfg.CONF[self.name].zone_name
         if event_type == 'compute.instance.create.end':
             valid_address = lambda x: IP(x) in IP(cfg.CONF[self.name].address_filter)
             payload['project'] = getattr(context, 'tenant', None)
+            record_name = '%s.%s' % (payload['host'], zone_name)
             filtered_addresses = []
             for address in payload['fixed_ips']:
                 if valid_address(address['address']):
