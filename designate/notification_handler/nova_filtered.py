@@ -16,8 +16,10 @@
 from oslo_config import cfg
 from oslo_log import log as logging
 from IPy import IP
-
-from designate.notification_handler.base import BaseAddressHandler
+from designate.context import DesignateContext
+from designate.objects import Record
+from designate.notification_handler.base import NotificationHandler
+#from designate.notification_handler.base import BaseAddressHandler
 
 
 LOG = logging.getLogger(__name__)
@@ -41,7 +43,7 @@ cfg.CONF.register_opts([
 ], group='handler:nova_filtered')
 
 
-class NovaFixedFilteredHandler(BaseAddressHandler):
+class NovaFixedFilteredHandler(NotificationHandler):
     """Handler for Nova's notifications"""
     __plugin_name__ = 'nova_filtered'
 
@@ -76,19 +78,32 @@ class NovaFixedFilteredHandler(BaseAddressHandler):
         valid_address = lambda x: IP(x) in IP(cfg.CONF[self.name].address_filter)
         filtered_addresses = []
         for address in addresses:
-            if valid_address(address.address):
+            if valid_address(address['address']):
                 filtered_addresses.append(address)
         return filtered_addresses
 
     def process_notification(self, context, event_type, payload):
         LOG.debug('NovaFixedFilteredHandler received notification - %s', event_type)
+        context = DesignateContext().elevated()
+        context.all_tenants = True
 
         zone_id = cfg.CONF[self.name].zone_id
         if event_type == 'compute.instance.create.end':
             payload['project'] = getattr(context, 'tenant', None)
             filtered_addresses = get_filteredaddresses(payload['fixed_ips']) 
             if filtered_addresses:
-                LOG.debug('NovaFixedFilteredHandler Filtered %d -> %d', len(payload['fixed_ips'], len(cfg.CONF[self.name].address_filter))
+                LOG.debug('NovaFixedFilteredHandler Filtered %d -> %d', len(payload['fixed_ips']))
+                for address in filtered_addresses:
+                    recordset_values = {
+                        'zone_id': zone_id,
+                        'name': record_name,
+                        'type': 'A' if address['version'] == 4 else 'AAAA'
+                    }
+                    record_values = {
+                        'data': address['address'], 
+                    }
+                    recordset = self._find_or_create_recordset(context, **recordset_values)
+                    self.central_api.create_record(context, zone_id, recordset['id'], Record(**record_values))
                 self._create(addresses=filtered_addresses,
                          extra=payload,
                          zone_id=zone_id,
