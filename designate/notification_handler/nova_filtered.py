@@ -60,28 +60,6 @@ class NovaFixedFilteredHandler(NotificationHandler):
             'compute.instance.delete.start',
         ]
 
-    def _get_ip_data(self, addr_dict):
-        data = super(NovaFixedFilteredHandler, self)._get_ip_data(addr_dict)
-        data['label'] = addr_dict['label']
-        return data
-    def get_filtered_addresses(self, addresses):
-        """ Addresses is in format:
-        fixed_ips = [{
-            "floating_ips": [],
-            "label": "private",
-            "version": 4,
-            "meta": {},
-            "address": "172.16.0.14",
-            "type": "fixed"
-        }]
-        """
-        valid_address = lambda x: IP(x) in IP(cfg.CONF[self.name].address_filter)
-        filtered_addresses = []
-        for address in addresses:
-            if valid_address(address['address']):
-                filtered_addresses.append(address)
-        return filtered_addresses
-
     def process_notification(self, context, event_type, payload):
         LOG.debug('NovaFixedFilteredHandler received notification - %s', event_type)
         context = DesignateContext().elevated()
@@ -89,8 +67,13 @@ class NovaFixedFilteredHandler(NotificationHandler):
 
         zone_id = cfg.CONF[self.name].zone_id
         if event_type == 'compute.instance.create.end':
+            valid_address = lambda x: IP(x) in IP(cfg.CONF[self.name].address_filter)
             payload['project'] = getattr(context, 'tenant', None)
-            filtered_addresses = get_filteredaddresses(payload['fixed_ips']) 
+            filtered_addresses = []
+            for address in payload['fixed_ips']:
+                if valid_address(address['address']):
+                    filtered_addresses.append(address)
+
             if filtered_addresses:
                 LOG.debug('NovaFixedFilteredHandler Filtered %d -> %d', len(payload['fixed_ips']))
                 for address in filtered_addresses:

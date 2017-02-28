@@ -15,6 +15,7 @@
 # under the License.
 from oslo_config import cfg
 from oslo_log import log as logging
+from IPy import IP
 
 from designate.notification_handler.base import BaseAddressHandler
 
