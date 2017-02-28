@@ -19,13 +19,11 @@ from IPy import IP
 from designate.context import DesignateContext
 from designate.objects import Record
 from designate.notification_handler.base import NotificationHandler
-#from designate.notification_handler.base import BaseAddressHandler
-
 
 LOG = logging.getLogger(__name__)
 
 cfg.CONF.register_group(cfg.OptGroup(
-    name='handler:nova_filtered',
+    name='handler:filtered',
     title="Configuration for Nova Notification Handler"
 ))
 
@@ -40,12 +38,12 @@ cfg.CONF.register_opts([
                     deprecated_reason="Replaced by 'formatv4/formatv6'",
                     ),
     cfg.MultiStrOpt('formatv6')
-], group='handler:nova_filtered')
+], group='handler:filtered')
 
 
-class NovaFixedFilteredHandler(NotificationHandler):
+class FilteredHandler(NotificationHandler):
     """Handler for Nova's notifications"""
-    __plugin_name__ = 'nova_filtered'
+    __plugin_name__ = 'filtered'
 
     def get_exchange_topics(self):
         exchange = cfg.CONF[self.name].control_exchange
@@ -95,7 +93,7 @@ class NovaFixedFilteredHandler(NotificationHandler):
                          resource_id=payload['instance_id'],
                          resource_type='instance')
             else:
-                LOG.debug('NovaFixedFilteredHandler No Results after filtering for %s', self.address_filter)
+                LOG.debug('FilteredHandler No Results after filtering for %s', self.address_filter)
 
         elif event_type == 'compute.instance.delete.start':
             self._delete(zone_id=zone_id,
