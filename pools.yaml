@@ -1,0 +1,47 @@
+- also_notifies: []
+  attributes: {}
+  id: 794ccc2c-d751-44fe-b57f-8894c9f5c842
+  name: default
+  nameservers:
+    - host: 10.0.0.10
+      port: 53
+    - host: 10.0.0.210
+      port: 53
+  ns_records: 
+  - hostname: controller1.
+    priority: 10
+  - hostname: ns2.pants.net.
+    priority: 9
+  targets:
+    - type: powerdns
+      description: PowerDNS Database Cluster
+
+      # List out the designate-mdns servers from which PowerDNS servers should
+      # request zone transfers (AXFRs) from.
+      masters:
+        - host: 10.0.0.10
+          port: 5354
+
+      # PowerDNS Configuration options
+      options:
+        host: 10.0.0.10
+        port: 53
+        connection: 'mysql+pymysql://designate:mesos123@controller/designate_pdns?charset=utf8'
+    - type: pdns4
+      description: PowerDNS4 DNS Server
+
+      # List out the designate-mdns servers from which PowerDNS servers should
+      # request zone transfers (AXFRs) from.
+      masters:
+        - host: 10.0.0.10
+          port: 5354
+
+      # PowerDNS Configuration options
+      options:
+        host: 10.0.0.210
+        port: 53
+        api_endpoint: http://10.0.0.210:8081
+        api_token: changeme
+  also_notifies:
+   - host: 10.0.0.210
+     port: 53
