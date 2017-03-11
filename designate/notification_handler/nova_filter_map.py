@@ -73,11 +73,11 @@ class NovaFilterMapHandler(BaseAddressHandler):
             payload['project'] = getattr(context, 'tenant', None)
             for zone in zone_map:
                 for address in payload['fixed_ips']:
-                    LOG.debug('NovaFixedFilterHandler:address_filter:%s', zone['address_filter'])
+                    LOG.debug('NovaFilterMapHandler:address_filter:%s', zone['address_filter'])
                     LOG.debug('NovaFilterMapHandler:address:%s', address['address'])
                     if valid_address(address['address'], zone['address_filter']):
-                        LOG.debug('NovaFixedFilterHandler:address:valid:True')
-                        LOG.debug('NovaFixedFilterHandler:address:adding to domain:%s', zone['zone_name'])
+                        LOG.debug('NovaFilterMapHandler:address:valid:True')
+                        LOG.debug('NovaFilterMapHandler:address:adding to domain:%s', zone['zone_name'])
                         self._create(addresses=[address],
                                      extra=payload,
                                      zone_id=zone['zone_id'],
