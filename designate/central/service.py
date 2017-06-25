@@ -1401,6 +1401,7 @@ class Service(service.RPCService, service.Service):
         policy.check('update_recordset', context, target)
 
         if recordset.managed and not context.edit_managed_records:
+            
             raise exceptions.BadRequest('Managed records may not be updated')
 
         recordset, zone = self._update_recordset_in_storage(
@@ -1464,6 +1465,7 @@ class Service(service.RPCService, service.Service):
         policy.check('delete_recordset', context, target)
 
         if recordset.managed and not context.edit_managed_records:
+
             raise exceptions.BadRequest('Managed records may not be deleted')
 
         recordset, zone = self._delete_recordset_in_storage(

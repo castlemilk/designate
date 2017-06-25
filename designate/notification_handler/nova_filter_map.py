@@ -71,6 +71,7 @@ class NovaFilterMapHandler(BaseAddressHandler):
         zone_map = map(lambda x: {'zone_id': x[0], 'zone_name': x[1], 'address_filter': x[2]}, [x.strip().split(':') for x in map_items])
         if event_type == 'compute.instance.create.end':
             payload['project'] = getattr(context, 'tenant', None)
+            LOG.debug('NovaFilterMapHandler:payload:%s', payload)
             for zone in zone_map:
                 for address in payload['fixed_ips']:
                     LOG.debug('NovaFilterMapHandler:address_filter:%s', zone['address_filter'])
